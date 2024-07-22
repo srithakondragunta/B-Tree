@@ -49,8 +49,8 @@ public class BTreeMain {
                             String major = s2.next();
                             String level = s2.next();
                             int age = Integer.parseInt(s2.next());
-                            /** TODO: Write a logic to generate recordID*/
-                            long recordID = ;
+                            // logic to generate random recordID
+                            long recordID = (long) (Math.random() * 1000000);
 
                             Student s = new Student(studentId, age, studentName, major, level, recordID);
                             bTree.insert(s);
@@ -93,13 +93,32 @@ public class BTreeMain {
     }
 
     private static List<Student> getStudents() {
-
-        /** TODO:
+        /**
          * Extract the students information from "Students.csv"
          * return the list<Students>
          */
 
         List<Student> studentList = new ArrayList<>();
+        // use Scanner to read and parse through Student csv file
+        try (Scanner scnr = new Scanner(new File("src/Student.csv"))) {
+            // for each line of the file
+            while(scnr.hasNextLine()) {
+                String[] data = scnr.nextLine().split(","); // split line data by comma
+                
+                // store values
+                long studentId = Long.parseLong(data[0]);
+                String studentName = data[1];
+                String major = data[2];
+                String level = data[3];
+                int age = Integer.parseInt(data[4]);
+                long recordId = Long.parseLong(data[5]);
+                // create student object
+                Student student = new Student(studentId, age, studentName, major, level, recordId);
+                studentList.add(student); //store in studentList to return
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Student csv not found.");
+        }
         return studentList;
     }
 }
