@@ -25,13 +25,34 @@ class BTree {
     }
 
     long search(long studentId) {
-        /**
-         * TODO:
-         * Implement this function to search in the B+Tree.
-         * Return recordID for the given StudentID.
-         * Otherwise, print out a message that the given studentId has not been found in the table and return -1.
-         */
-        return -1;
+        long result = searchHelper(root,studentId);
+        if(result == -1){
+            System.out.println("The studentId:" + studentId + " has not been found in the table");
+        }
+        return result;
+    }
+
+    private Long searchHelper(BTreeNode node, long k) {
+        int i = 0;
+        // Find the first key greater than or equal to k (Ki)
+        while (i < node.n && k > node.keys[i]) {
+            i++;
+        }
+        if (i < node.n && k == node.keys[i]) {
+            // If the found key is equal to k, and it's a leaf node, return the value
+            if (node.leaf) {
+                return node.values[i];
+            } else {
+                // If the node is not a leaf, follow the child pointer
+                return searchHelper(node.children[i + 1], k);
+            }
+        }
+        // If the node is a leaf node and key is not found
+        if (node.leaf) {
+            return (long) -1;
+        }
+        // Follow the child pointer
+        return searchHelper(node.children[i], k);
     }
 
     BTree insert(Student student) {
