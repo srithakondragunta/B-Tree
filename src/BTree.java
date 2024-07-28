@@ -28,7 +28,12 @@ class BTree {
     }
 
     long search(long studentId) {
-        long result = searchHelper(root,studentId);
+        long result;
+        if (root == null){
+            result = -1;
+        }else{        
+            result = searchHelper(root,studentId);
+        }
         if(result == -1){
             System.out.println("The studentId:" + studentId + " has not been found in the table");
         }
