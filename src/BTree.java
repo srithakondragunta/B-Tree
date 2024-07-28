@@ -1,3 +1,6 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -241,7 +244,45 @@ class BTree {
          * Also, delete in student.csv after deleting in B+Tree, if it exists.
          * Return true if the student is deleted successfully otherwise, return false.
          */
+        if (search(studentId) == -1) { // in case the studentId is not in the tree
+            return false;
+        }
+        //deleteHelper(root, studentId);
         return true;
+    }
+
+    
+
+    public void deleteRecord(long studentId) {
+        String csvFilePath = "../data/Student.csv";
+        List<String> lines = new ArrayList<>();
+        String line;
+
+        // Read the CSV file and store all the lines except the ones that match 
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFilePath))) {
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                if (values.length > 0 && !values[0].isEmpty()) {
+                    
+                        long id = Long.parseLong(values[0]);
+                        if (id != studentId) {
+                            lines.add(line);
+                        } 
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Write the remaining lines back to the original CSV file
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvFilePath))) {
+            for (String l : lines) {
+                bw.write(l);
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // provided print statements
@@ -266,7 +307,7 @@ class BTree {
             node = node.next;
         }
     }
-
+    
     // additional print statement for debugging
     public void printTree() {
         printTreeHelper(root, 0);
