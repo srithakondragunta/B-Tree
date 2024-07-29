@@ -97,6 +97,10 @@ public class BTreeSearchTester {
             return false;
         }
 
+        // Print the B-tree structure before returning true
+        System.out.println("B-tree structure before returning true:");
+        bTree.printTree();
+
         return true;
     }
 

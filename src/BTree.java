@@ -76,21 +76,21 @@ class BTree {
     BTree insert(Student student) {
         System.out.println("Inserting student: " + student.studentId);
 
-        if (root == null) {
-            root = new BTreeNode(t, true);
+        if (root == null) { // if the tree is empty
+            root = new BTreeNode(t, true); // make a new root + insert student record
             root.keys[0] = student.studentId;
             root.values[0] = student.recordId;
             root.n = 1;
             System.out.println("Created new root with studentId: " + student.studentId);
         } else {
-            if (root.n == 2 * t) {
-                BTreeNode newRoot = new BTreeNode(t, false);
-                newRoot.children[0] = root;
-                splitChild(newRoot, 0, root);
-                root = newRoot;
+            if (root.n == 2 * t) { // if the root is full
+                BTreeNode newRoot = new BTreeNode(t, false); // make a new root
+                newRoot.children[0] = root; // make the new root's child the old root
+                splitChild(newRoot, 0, root); // split the old root into two children
+                root = newRoot; // make the new root the root
                 System.out.println("Root was full, created new root and split child");
             }
-            insertNonFull(root, student);
+            insertNonFull(root, student); // insert the student record in the correct place
         }
 
         try (FileWriter fw = new FileWriter("../data/Student.csv", true)) {
@@ -101,53 +101,86 @@ class BTree {
         return this;
     }
 
+    private void insertNonFull(BTreeNode node, Student student) {
+        int i = node.n - 1;
+
+        if (node.leaf) {
+            // find correct place to insert student record (shifts to the right until spot is found)
+            while (i >= 0 && student.studentId < node.keys[i]) {
+                node.keys[i + 1] = node.keys[i];
+                node.values[i + 1] = node.values[i];
+                i--;
+            }
+            node.keys[i + 1] = student.studentId; // inserts in open slot
+            node.values[i + 1] = student.recordId;
+            node.n++;
+            System.out.println("Inserted studentId: " + student.studentId + " into leaf node with keys: " + Arrays.toString(node.keys));
+        } else {
+            // find correct child to insert student record into
+            while (i >= 0 && student.studentId < node.keys[i]) {
+                i--;
+            }
+            i++; 
+            if (node.children[i].n == 2 * t) { // if the child is full
+                splitChild(node, i, node.children[i]); // split the child into two children
+                if (student.studentId > node.keys[i]) {
+                    i++;
+                }
+            }
+            insertNonFull(node.children[i], student); // recursive call on children nodes
+        }
+
+        System.out.println("Inserted studentId: " + student.studentId + " into node with keys: " + Arrays.toString(node.keys));
+    }
+
     private void splitChild(BTreeNode parent, int i, BTreeNode fullChild) {
         System.out.println("Splitting child node at index: " + i);
-        BTreeNode newChild = new BTreeNode(t, fullChild.leaf);
-        int mid = t;
+        BTreeNode newChild = new BTreeNode(t, fullChild.leaf); // make a new child node
+        int mid = t; // middle index
 
         if (fullChild.leaf) {
             newChild.n = t;
 
-            for (int j = 0; j < t; j++) {
+            for (int j = 0; j < t; j++) { // copy keys and values from full child to new child
                 newChild.keys[j] = fullChild.keys[mid + j];
                 newChild.values[j] = fullChild.values[mid + j];
                 fullChild.keys[mid + j] = 0;
                 fullChild.values[mid + j] = 0;
             }
-            fullChild.n = mid;
+            fullChild.n = mid; // update number of nodes in full child
 
-            newChild.next = fullChild.next;
+            newChild.next = fullChild.next; // update next pointer
             fullChild.next = newChild;
 
-            for (int j = parent.n; j >= i + 1; j--) {
+            for (int j = parent.n; j >= i + 1; j--) { // shift parent's children right by 1
                 parent.children[j + 1] = parent.children[j];
             }
-            for (int j = parent.n - 1; j >= i; j--) {
+            for (int j = parent.n - 1; j >= i; j--) { // shift parent's keys right by 1
                 parent.keys[j + 1] = parent.keys[j];
             }
 
-            parent.children[i + 1] = newChild;
-            parent.keys[i] = newChild.keys[0];
-            parent.n++;
+            parent.children[i + 1] = newChild; // insert new child into parent
+            parent.keys[i] = newChild.keys[0]; // insert new key into parent
+            parent.n++; // increment number of nodes in parent
 
         } else {
-            newChild.n = t;
+            newChild.n = t - 1;
             for (int j = 0; j < t - 1; j++) {
                 newChild.keys[j] = fullChild.keys[mid + 1 + j];
             }
             for (int j = 0; j < t; j++) {
                 newChild.children[j] = fullChild.children[mid + 1 + j];
+                fullChild.children[mid + 1 + j] = null;  // Clear the reference to avoid loose ends
             }
             fullChild.n = mid;
 
-            for (int j = parent.n; j >= i + 1; j--) {
+            for (int j = parent.n; j >= i + 1; j--) { // shift parent's children right by 1
                 parent.children[j + 1] = parent.children[j];
             }
-            for (int j = parent.n; j >= i; j--) {
+            for (int j = parent.n; j >= i; j--) { // shift parent's keys right by 1
                 parent.keys[j + 1] = parent.keys[j];
             }
-            parent.children[i + 1] = newChild;
+            parent.children[i + 1] = newChild; // insert new child into parent
             parent.keys[i] = fullChild.keys[mid];
             parent.n++;
         }
@@ -158,37 +191,6 @@ class BTree {
         System.out.println("New child keys: " + Arrays.toString(newChild.keys));
     }
 
-    private void insertNonFull(BTreeNode node, Student student) {
-        int i = node.n - 1;
-
-        if (node.leaf) {
-            while (i >= 0 && student.studentId < node.keys[i]) {
-                node.keys[i + 1] = node.keys[i];
-                node.values[i + 1] = node.values[i];
-                i--;
-            }
-            node.keys[i + 1] = student.studentId;
-            node.values[i + 1] = student.recordId;
-            node.n++;
-            System.out.println("Inserted studentId: " + student.studentId + " into leaf node with keys: " + Arrays.toString(node.keys));
-        } else {
-            while (i >= 0 && student.studentId < node.keys[i]) {
-                i--;
-            }
-            i++;
-            if (node.children[i].n == 2 * t) {
-                splitChild(node, i, node.children[i]);
-                if (student.studentId > node.keys[i]) {
-                    i++;
-                }
-            }
-            insertNonFull(node.children[i], student);
-        }
-
-        System.out.println("Inserted studentId: " + student.studentId + " into node with keys: " + Arrays.toString(node.keys));
-    }
-
-    
     boolean delete(long studentId) {
         /**
          * TODO:
