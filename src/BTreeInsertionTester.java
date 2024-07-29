@@ -32,7 +32,8 @@ public class BTreeInsertionTester {
         // Print detailed tree structure
         // had issue deleting 5,6,7,8,9,10 (threw null pointer)
         bTree.printTree();
-        bTree.deleteRecord(9);
-
+        System.out.println("After delete!");
+        bTree.delete(9);
+        bTree.printTree();
     }
 }
